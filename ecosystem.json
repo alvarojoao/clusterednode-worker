@@ -1,0 +1,39 @@
+{
+  "apps" : [{
+    "name": "nodeworker2",
+    "cwd": "/home/pi/cluster",
+    "script": "nodeworker2.js",
+    "watch": "nodeworker2.js",
+    "instances"  : 4,
+    "max_restarts" : 5,
+    "exec_mode"  : "cluster",
+    "env": { "NODE_ENV": "development" },
+    "env_production" : { "NODE_ENV": "production" }
+  }],
+  "deploy" : {
+    "production": {
+      "user": "pi",
+      "host": [
+        "192.168.69.244",
+        "192.168.69.243",
+        "192.168.69.241",
+        "192.168.69.240"
+      ],
+      // Branch
+      "ref": "origin/master",
+      // Git repository to clone
+      "repo": "git@github.com:repo.git",
+      // Path of the application on target servers
+      "path": "/var/www/production",
+      // Commands to execute locally (on the same machine you deploy things)
+      // Can be multiple commands separated by the character ";"
+      "pre-deploy-local": "echo 'This is a local executed command'"
+      // Commands to be executed on the server after the repo has been cloned
+      "post-deploy": "npm install && pm2 startOrRestart ecosystem.json --env production"
+      // Environment variables that must be injected in all applications on this env
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}

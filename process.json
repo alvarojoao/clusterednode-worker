@@ -1,0 +1,13 @@
+{
+  "apps" : [{
+    "name": "nodeworker2",
+    "cwd": "/home/pi/cluster",
+    "script": "nodeworker2.js",
+    "watch": "nodeworker2.js",
+    "instances"  : 4,
+    "max_restarts" : 5,
+    "exec_mode"  : "cluster",
+    "env": { "NODE_ENV": "development" },
+    "env_production" : { "NODE_ENV": "production" }
+  }]
+}
