@@ -5,7 +5,7 @@
     "script": "nodeworker2.js",
     "watch": "nodeworker2.js",
     "instances"  : 4,
-    "max_restarts" : 5,
+    "max_restarts" : 10,
     "exec_mode"  : "cluster",
     "env": { "NODE_ENV": "development" },
     "env_production" : { "NODE_ENV": "production" }
@@ -22,14 +22,15 @@
       // Branch
       "ref": "origin/master",
       // Git repository to clone
-      "repo": "git@github.com:repo.git",
+      "repo": "git@github.com:giancarlobonansea/clusterednode-worker.git",
       // Path of the application on target servers
-      "path": "/var/www/production",
+      "path": "~/cluster/www/node",
       // Commands to execute locally (on the same machine you deploy things)
       // Can be multiple commands separated by the character ";"
-      "pre-deploy-local": "echo 'This is a local executed command'"
+      // "pre-deploy-local": "echo 'This is a local executed command'"
       // Commands to be executed on the server after the repo has been cloned
-      "post-deploy": "npm install && pm2 startOrRestart ecosystem.json --env production"
+      //"post-deploy": "npm install && pm2 startOrRestart ecosystem.json --env production"
+      "post-deploy": "pm2 startOrGracefulReload ecosystem.json --env production",
       // Environment variables that must be injected in all applications on this env
       "env": {
         "NODE_ENV": "production"
