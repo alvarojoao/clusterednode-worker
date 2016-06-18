@@ -14,7 +14,7 @@ var http2     = require('http2'),
     ni        = nis[process.env.INTERFACE],
     eth       = ni[0].address,
     pid       = process.pid,
-    offset    = process.env.TIMEOFFSET,
+    offset    = parseFloat(process.env.TIMEOFFSET),
     msg       = '{"hostname":"' + hostname + '","ipaddress":"' + eth + '","pid":' + pid + '}';
 var server = http2.createServer({
                                     key: fs.readFileSync('./nginx-selfsigned.key'),
