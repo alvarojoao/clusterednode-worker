@@ -24,7 +24,7 @@
       // Git repository to clone
       "repo": "git@github.com:giancarlobonansea/clusterednode-worker.git",
       // Path of the application on target servers
-      "path": "~/cluster/www/node",
+      "path": "~/cluster",
       // Commands to execute locally (on the same machine you deploy things)
       // Can be multiple commands separated by the character ";"
       // "pre-deploy-local": "echo 'This is a local executed command'"
