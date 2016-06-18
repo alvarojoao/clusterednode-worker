@@ -1,10 +1,12 @@
 {
-  "name": "clusterAPInode",
+  "name": "clusteredAPInode",
   "version": "1.0.2",
   "description": "Clustered HTTP2 API server",
   "main": "nodeworker2.js",
   "dependencies": {
     "http2": "^3.3.4",
+    "nan": "^2.3.5",
+    "node-pre-gyp": "^0.6.28",
     "on-headers": "^1.0.1",
     "pmx": "^0.6.2",
     "v8-profiler": "^5.6.5"

@@ -1,13 +1,21 @@
 {
   "apps" : [{
-    "name": "nodeworker2",
+    "name": "clusteredAPInode",
     "cwd": "/home/pi/cluster/current",
     "script": "nodeworker2.js",
     "watch": "nodeworker2.js",
     "instances"  : 4,
     "max_restarts" : 10,
     "exec_mode"  : "cluster",
-    "env": { "NODE_ENV": "development" },
-    "env_production" : { "NODE_ENV": "production" }
+    "env": {
+      "INTERFACE": "eth0",
+      "TIMEOFFSET": 0.9,
+      "NODE_ENV": "development"
+    },
+    "env_production": {
+      "INTERFACE": "eth0",
+      "TIMEOFFSET": 0.9,
+      "NODE_ENV": "production"
+    }
   }]
 }
