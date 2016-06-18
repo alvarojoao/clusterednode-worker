@@ -1,19 +1,20 @@
 require('pmx').init({
-  http          :              true, // HTTP routes logging (default: true)
-  errors        :              true, // Exceptions loggin (default: true)
-  custom_probes :              true, // Auto expose JS Loop Latency and HTTP req/s as custom metrics
-  network       :              true, // Network monitoring at the application level
-	                    ports: false // Shows which ports your app is listening on (default: false)
+	                    http:          true, // HTTP routes logging (default: true)
+	                    errors:        true, // Exceptions loggin (default: true)
+	                    custom_probes: true, // Auto expose JS Loop Latency and HTTP req/s as custom metrics
+	                    network:       true, // Network monitoring at the application level
+	                    ports:         false // Shows which ports your app is listening on (default: false)
 });
 var http2     = require('http2'),
     onHeaders = require('on-headers'),
     fs        = require('fs'),
     os        = require('os'),
     hostname  = os.hostname(),
-    ni        = os.networkInterfaces(),
-    eth       = ni[process.env.INTERFACE || 'eth0'][0].address,
+    nis       = os.networkInterfaces(),
+    ni        = nis[process.env.INTERFACE],
+    eth       = ni[0].address,
     pid       = process.pid,
-    offset    = process.env.TIMEOFFSET || 0.9,
+    offset    = process.env.TIMEOFFSET,
     msg       = '{"hostname":"' + hostname + '","ipaddress":"' + eth + '","pid":' + pid + '}';
 var server = http2.createServer({
                                     key: fs.readFileSync('./nginx-selfsigned.key'),
