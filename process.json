@@ -8,12 +8,10 @@
     "max_restarts" : 10,
     "exec_mode"  : "cluster",
     "env": {
-      "INTERFACE": "eth0",
       "TIMEOFFSET": 0.9,
       "NODE_ENV": "development"
     },
     "env_production": {
-      "INTERFACE": "eth0",
       "TIMEOFFSET": 0.9,
       "NODE_ENV": "production"
     }

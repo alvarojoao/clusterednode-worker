@@ -8,15 +8,12 @@ require('pmx').init({
 var http2     = require('http2'),
     onHeaders = require('on-headers'),
     fs        = require('fs'),
-    os        = require('os'),
-    options   = {
-        key:  fs.readFileSync('./nginx-selfsigned.key'),
-        cert: fs.readFileSync('./nginx-selfsigned.crt')
-    },
-    nis       = os.networkInterfaces(),
     offset    = parseFloat(process.env.TIMEOFFSET),
-    msg       = '{"hostname":"' + os.hostname() + '","ipaddress":"' + nis[process.env.INTERFACE][0].address + '","pid":' + process.pid + '}';
-var server = http2.createServer(options, function(req, res) {
+    msg       = '{"hostname":"' + require('os').hostname() + '","pid":' + process.pid + '}';
+var server = http2.createServer({
+                                    key:  fs.readFileSync('./nginx-selfsigned.key'),
+                                    cert: fs.readFileSync('./nginx-selfsigned.crt')
+                                }, function(req, res) {
     var startAt = process.hrtime();
     onHeaders(res, function onHeaders() {
         var diff = process.hrtime(startAt),
