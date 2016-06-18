@@ -3,7 +3,7 @@ require('pmx').init({
   errors        : true, // Exceptions loggin (default: true)
   custom_probes : true, // Auto expose JS Loop Latency and HTTP req/s as custom metrics
   network       : true, // Network monitoring at the application level
-  ports         : true  // Shows which ports your app is listening on (default: false)
+  ports         : false  // Shows which ports your app is listening on (default: false)
 });
 var http2 = require('http2'),
     onHeaders = require('on-headers'),
@@ -15,12 +15,12 @@ var http2 = require('http2'),
     offset = 0.9,
     msg = '{"hostname":"'+hostname+'","ipaddress":"'+ni+'","pid":'+pid+'}';
 var server = http2.createServer({
-	key: fs.readFileSync('./nginx-selfsigned.key'),
-        cert: fs.readFileSync('./nginx-selfsigned.crt')
+                                    key: fs.readFileSync('./nginx-selfsigned.key'),
+                                    cert: fs.readFileSync('./nginx-selfsigned.crt')
 }, function(req, res) {
     var startAt = process.hrtime();
     onHeaders(res, function onHeaders() {
-      var diff = process.hrtime(startAt)
+      var diff = process.hrtime(startAt);
       var time = diff[0] * 1e3 + diff[1] * 1e-6 + offset;
       var val = time.toFixed(3);
       res.setHeader('X-Node-Time', val);

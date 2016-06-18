@@ -1,7 +1,7 @@
 {
   "apps" : [{
     "name": "nodeworker2",
-    "cwd": "/home/pi/cluster",
+    "cwd": "/home/pi/cluster/current",
     "script": "nodeworker2.js",
     "watch": "nodeworker2.js",
     "instances"  : 4,
