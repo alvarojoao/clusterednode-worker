@@ -39,7 +39,7 @@ var setKey = function(cb) {
 var getKey = function(cb) {
     var id = parseInt(Math.random() * repeat);
     client.hgetallAsync(id).then(function(res) {
-        cb(true, res);
+        cb(true, (res === null) ? {} : res);
     }, function(err) {
         cb(false, {});
     });
