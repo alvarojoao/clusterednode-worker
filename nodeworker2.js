@@ -32,7 +32,7 @@ var setKey = function(cb) {
 var getKey = function(cb) {
     var id = parseInt(Math.random * 2048);
     // client.hmgetAsync(id).then(function(res){cb(res);});
-    client.hmgetall(id, function(err, reply) {
+    client.hgetall(id, function(err, reply) {
         cb(reply);
     });
 };
