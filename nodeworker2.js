@@ -83,7 +83,7 @@ var server = http2.createServer({
     //
     // Send message
     //
-    res.end(msg);
+    res.end(JSON.stringify(msg));
 }).listen(8010);
 process.on('SIGINT', function() {
     client.quit();
