@@ -10,7 +10,8 @@ var http2     = require('http2'),
     onHeaders = require('on-headers'),
     fs        = require('fs'),
     redis     = require('redis'),
-    client    = redis.createClient({host: 'raspberrypi1', prefix: 'clusterednode'}),
+    repeat    = 100,
+    client    = redis.createClient({host: 'raspberrypi1', prefix: 'clusterednode:'}),
     offset    = parseFloat(process.env.TIMEOFFSET),
     hostname  = require('os').hostname(),
     pid       = process.pid,
@@ -21,7 +22,7 @@ var http2     = require('http2'),
 // bluebird.promisifyAll(redis.RedisClient.prototype);
 // bluebird.promisifyAll(redis.Multi.prototype);
 var setKey = function(cb) {
-    var id  = parseInt(Math.random() * 2048),
+    var id  = parseInt(Math.random() * repeat),
         ts  = Date.now(),
         obj = {hostname: hostname, pid: pid, ts: ts};
     // client.hmsetAsync(id,{hostname: hostname, pid: pid, ts: ts}).then(function(res){cb(res);});
@@ -31,7 +32,7 @@ var setKey = function(cb) {
     });
 };
 var getKey = function(cb) {
-    var id = parseInt(Math.random() * 2048);
+    var id = parseInt(Math.random() * repeat);
     // client.hmgetAsync(id).then(function(res){cb(res);});
     client.hgetall(id, function(err, reply) {
         console.log('get', err, reply);
