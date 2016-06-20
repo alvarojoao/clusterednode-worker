@@ -6,7 +6,7 @@ require('pmx').init({
                         ports:         false // Shows which ports your app is listening on (default: false)
                     });
 var http2     = require('http2'),
-    // bluebird  = require('bluebird'),
+    bluebird  = require('bluebird'),
     onHeaders = require('on-headers'),
     fs        = require('fs'),
     redis     = require('redis'),
@@ -19,24 +19,24 @@ var http2     = require('http2'),
         hostname: hostname,
         pid:      pid
     };
-// bluebird.promisifyAll(redis.RedisClient.prototype);
-// bluebird.promisifyAll(redis.Multi.prototype);
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
 var setKey = function(cb) {
     var id  = parseInt(Math.random() * repeat),
         ts  = Date.now(),
         obj = {hostname: hostname, pid: pid, ts: ts};
     // client.hmsetAsync(id,{hostname: hostname, pid: pid, ts: ts}).then(function(res){cb(res);});
-    client.hmset(id, obj, function(err, reply) {
-        console.log('set', err, reply);
-        cb(reply);
+    client.hmsetAsync(id, obj).then(function(res) {
+        console.log('set', res);
+        cb(res);
     });
 };
 var getKey = function(cb) {
     var id = parseInt(Math.random() * repeat);
     // client.hmgetAsync(id).then(function(res){cb(res);});
-    client.hgetall(id, function(err, reply) {
-        console.log('get', err, reply);
-        cb(reply);
+    client.hgetallAsync(id).then(function(res) {
+        console.log('get', res);
+        cb(res);
     });
 };
 var server = http2.createServer({
