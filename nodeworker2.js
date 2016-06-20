@@ -6,7 +6,7 @@ require('pmx').init({
                         ports:         false // Shows which ports your app is listening on (default: false)
                     });
 var http2     = require('http2'),
-    bluebird  = require('bluebird'),
+    promise   = require('bluebird'),
     onHeaders = require('on-headers'),
     fs        = require('fs'),
     redis     = require('redis'),
@@ -19,23 +19,26 @@ var http2     = require('http2'),
         hostname: hostname,
         pid:      pid
     };
-bluebird.promisifyAll(redis.RedisClient.prototype);
-bluebird.promisifyAll(redis.Multi.prototype);
+promise.promisifyAll(redis.RedisClient.prototype);
+promise.promisifyAll(redis.Multi.prototype);
 var setKey = function(cb) {
     var id  = parseInt(Math.random() * repeat),
         ts  = Date.now(),
         obj = {hostname: hostname, pid: pid, ts: ts};
-    // client.hmsetAsync(id,{hostname: hostname, pid: pid, ts: ts}).then(function(res){cb(res);});
     client.hmsetAsync(id, obj).then(function(res) {
-        console.log('set', res);
-        cb(res);
+        if (res === 'OK') {
+            cb(true);
+        }
+        else {
+            cb(false);
+        }
+    }, function(err) {
+        cb(false);
     });
 };
 var getKey = function(cb) {
     var id = parseInt(Math.random() * repeat);
-    // client.hmgetAsync(id).then(function(res){cb(res);});
     client.hgetallAsync(id).then(function(res) {
-        console.log('get', res);
         cb(res);
     });
 };
@@ -74,16 +77,27 @@ var server = http2.createServer({
     if (Math.round(Math.random()) === 0) {
         // Set key
         setKey(function(r) {
-            msg.redisAction = 'set';
-            msg.redisObject = '';
+            if (r) {
+                msg.redisAction = 'SET';
+            }
+            else {
+                msg.redisAction = 'ERR';
+            }
+            msg.redisObject = {};
             res.end(JSON.stringify(msg));
         });
     }
     else {
         // Get key
-        getKey(function(r) {
-            msg.redisAction = 'get';
-            msg.redisObject = r;
+        getKey(function(r, obj) {
+            if (r) {
+                msg.redisAction = 'GET';
+                msg.redisObject = obj;
+            }
+            else {
+                msg.redisAction = 'ERR';
+                msg.redisObject = {};
+            }
             res.end(JSON.stringify(msg));
         });
     }
