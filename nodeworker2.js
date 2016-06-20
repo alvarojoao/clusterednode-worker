@@ -39,7 +39,9 @@ var setKey = function(cb) {
 var getKey = function(cb) {
     var id = parseInt(Math.random() * repeat);
     client.hgetallAsync(id).then(function(res) {
-        cb(res);
+        cb(true, res);
+    }, function(err) {
+        cb(false, {});
     });
 };
 var server = http2.createServer({
@@ -92,12 +94,11 @@ var server = http2.createServer({
         getKey(function(r, obj) {
             if (r) {
                 msg.redisAction = 'GET';
-                msg.redisObject = obj;
             }
             else {
                 msg.redisAction = 'ERR';
-                msg.redisObject = {};
             }
+            msg.redisObject = obj;
             res.end(JSON.stringify(msg));
         });
     }
