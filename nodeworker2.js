@@ -26,7 +26,7 @@ var setKey = function(cb) {
         obj = {hostname: hostname, pid: pid, ts: ts};
     // client.hmsetAsync(id,{hostname: hostname, pid: pid, ts: ts}).then(function(res){cb(res);});
     client.hmset(id, obj, function(err, reply) {
-        consoloe.log('set', err, reply);
+        console.log('set', err, reply);
         cb(reply);
     });
 };
@@ -34,6 +34,7 @@ var getKey = function(cb) {
     var id = parseInt(Math.random() * 2048);
     // client.hmgetAsync(id).then(function(res){cb(res);});
     client.hgetall(id, function(err, reply) {
+        console.log('get', err, reply);
         cb(reply);
     });
 };
@@ -74,6 +75,7 @@ var server = http2.createServer({
         setKey(function(r) {
             msg.redisAction = 'set';
             msg.redisObject = '';
+            res.end(JSON.stringify(msg));
         });
     }
     else {
@@ -81,12 +83,12 @@ var server = http2.createServer({
         getKey(function(r) {
             msg.redisAction = 'get';
             msg.redisObject = r;
+            res.end(JSON.stringify(msg));
         });
     }
     //
     // Send message
     //
-    res.end(JSON.stringify(msg));
 }).listen(8010);
 process.on('SIGINT', function() {
     client.quit();
