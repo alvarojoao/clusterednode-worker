@@ -86,6 +86,9 @@ var server = http2.createServer({
                 msg.redisAction = 'ERR';
             }
             msg.redisObject = {};
+            //
+            // Send message
+            //
             res.end(JSON.stringify(msg));
         });
     }
@@ -99,13 +102,13 @@ var server = http2.createServer({
                 msg.redisAction = 'ERR';
             }
             msg.redisObject = obj;
+            //
+            // Send message
+            //
             res.end(JSON.stringify(msg));
         });
     }
-    //
-    // Send message
-    //
-}).listen(8010);
+}).listen(process.env.NODEPORT);
 process.on('SIGINT', function() {
     client.quit();
     server.close();

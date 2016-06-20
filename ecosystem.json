@@ -8,11 +8,13 @@
     "max_restarts" : 10,
     "exec_mode"  : "cluster",
     "env": {
-      "TIMEOFFSET": 0.9,
+      "NODEPORT": 8010,
+      "TIMEOFFSET": 0.0,
       "NODE_ENV": "development"
     },
     "env_production": {
-      "TIMEOFFSET": 0.9,
+      "NODEPORT": 8010,
+      "TIMEOFFSET": 0.0,
       "NODE_ENV": "production"
     }
   }],
@@ -28,8 +30,7 @@
       "ref": "origin/master",
       "repo": "git@github.com:giancarlobonansea/clusterednode-worker.git",
       "path": "~/cluster",
-      //"post-deploy": "npm install --save && pm2 startOrRestart ecosystem.json --env production",
-      "post-deploy": "npm install --save && pm2 startOrReload ecosystem.json --env production",
+      "post-deploy": "npm install && pm2 startOrReload ecosystem.json --env production",
       "env": {
         "NODE_ENV": "production"
       }

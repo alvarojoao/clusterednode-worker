@@ -8,11 +8,13 @@
     "max_restarts" : 10,
     "exec_mode"  : "cluster",
     "env": {
-      "TIMEOFFSET": 0.9,
+      "NODEPORT": 8010,
+      "TIMEOFFSET": 0.0,
       "NODE_ENV": "development"
     },
     "env_production": {
-      "TIMEOFFSET": 0.9,
+      "NODEPORT": 8010,
+      "TIMEOFFSET": 0.0,
       "NODE_ENV": "production"
     }
   }]
