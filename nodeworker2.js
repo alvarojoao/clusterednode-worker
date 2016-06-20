@@ -21,16 +21,19 @@ var http2     = require('http2'),
 // bluebird.promisifyAll(redis.RedisClient.prototype);
 // bluebird.promisifyAll(redis.Multi.prototype);
 var setKey = function(cb) {
-    var id = parseInt(Math.random * 2048),
-        ts = Date.now();
+    var id  = parseInt(Math.random * 2048),
+        ts  = Date.now(),
+        obj = {hostname: hostname, pid: pid, ts: ts};
     // client.hmsetAsync(id,{hostname: hostname, pid: pid, ts: ts}).then(function(res){cb(res);});
-    client.hmset(id, {hostname: hostname, pid: pid, ts: ts});
+    client.hmset(id, obj, function(err, reply) {
+        cb(reply);
+    });
 };
 var getKey = function(cb) {
     var id = parseInt(Math.random * 2048);
     // client.hmgetAsync(id).then(function(res){cb(res);});
-    client.hmget(id, function(err, reply) {
-        console.log(reply);
+    client.hmgetall(id, function(err, reply) {
+        cb(reply);
     });
 };
 var server = http2.createServer({
@@ -67,11 +70,15 @@ var server = http2.createServer({
     //
     if (Math.round(Math.random()) === 0) {
         // Set key
-        setKey();
+        setKey(function(r) {
+            console.log('setKey', r);
+        });
     }
     else {
         // Get key
-        getKey();
+        getKey(function(r) {
+            console.log('getKey', r);
+        });
     }
     //
     // Send message
