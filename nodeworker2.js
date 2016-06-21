@@ -21,7 +21,7 @@ var http2     = require('http2'),
     };
 promise.promisifyAll(redis.RedisClient.prototype);
 promise.promisifyAll(redis.Multi.prototype);
-var setKey = function(cb) {
+var setKey = function(cb, respon) {
     var id       = parseInt(Math.random() * repeat),
         ts       = Date.now(),
         obj      = {hostname: hostname, pid: pid, ts: ts},
@@ -29,7 +29,7 @@ var setKey = function(cb) {
     client.hmsetAsync(id, obj).then(function(res) {
         var diffR = process.hrtime(startAtR),
             timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
-        res.setHeader('X-Redis-Time', timeR.toFixed(3));
+        respon.setHeader('X-Redis-Time', timeR.toFixed(3));
         if (res === 'OK') {
             cb(true);
         }
@@ -40,13 +40,13 @@ var setKey = function(cb) {
         cb(false);
     });
 };
-var getKey = function(cb) {
+var getKey = function(cb, respon) {
     var id       = parseInt(Math.random() * repeat),
         startAtR = process.hrtime();
     client.hgetallAsync(id).then(function(res) {
         var diffR = process.hrtime(startAtR),
             timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
-        res.setHeader('X-Redis-Time', timeR.toFixed(3));
+        respon.setHeader('X-Redis-Time', timeR.toFixed(3));
         cb(true, (res === null) ? {} : res);
     }, function(err) {
         cb(false, {});
@@ -98,7 +98,7 @@ var server = http2.createServer({
             // Send message
             //
             res.end(JSON.stringify(msg));
-        });
+        }, res);
     }
     else {
         // Get key
@@ -114,7 +114,7 @@ var server = http2.createServer({
             // Send message
             //
             res.end(JSON.stringify(msg));
-        });
+        }, res);
     }
 }).listen(process.env.NODEPORT);
 process.on('SIGINT', function() {
