@@ -9,9 +9,9 @@ var http2     = require('http2'),
     promise   = require('bluebird'),
     onHeaders = require('on-headers'),
     fs        = require('fs'),
+    tls       = require('tls'),
     redis     = require('redis'),
     repeat    = 100,
-    client    = redis.createClient({host: 'raspberrypi1', prefix: 'clusterednode:'}),
     offset    = parseFloat(process.env.TIMEOFFSET),
     hostname  = require('os').hostname(),
     pid       = process.pid,
@@ -19,6 +19,36 @@ var http2     = require('http2'),
         hostname: hostname,
         pid:      pid
     };
+var ssl = {
+    key:  fs.readFileSync('./nginx-selfsigned.key', encoding = 'ascii'),
+    cert: fs.readFileSync('./nginx-selfsigned.crt', encoding = 'ascii')
+};
+var client = redis.createClient({
+                                    host:           'raspberrypi1',
+                                    prefix:         'clusterednode:',
+                                    password:       'N0d3p0c',
+                                    db:             0,
+                                    tls:            ssl,
+                                    retry_strategy: function(options) {
+                                        if (options.error.code === 'ECONNREFUSED') {
+                                            // End reconnecting on a specific error and flush all commands with a individual error
+                                            return new Error('The server refused the connection');
+                                        }
+                                        if (options.total_retry_time > 1000 * 60 * 60) {
+                                            // End reconnecting after a specific timeout and flush all commands with a individual error
+                                            return new Error('Retry time exhausted');
+                                        }
+                                        if (options.times_connected > 10) {
+                                            // End reconnecting with built in error
+                                            return undefined;
+                                        }
+                                        // reconnect after
+                                        return Math.max(options.attempt * 100, 3000);
+                                    }
+                                });
+client.on("error", function(err) {
+    console.log("redis.io Error: " + err);
+});
 promise.promisifyAll(redis.RedisClient.prototype);
 promise.promisifyAll(redis.Multi.prototype);
 var setKey = function(cb, respon) {
@@ -52,10 +82,7 @@ var getKey = function(cb, respon) {
         cb(false, {});
     });
 };
-var server = http2.createServer({
-                                    key:  fs.readFileSync('./nginx-selfsigned.key'),
-                                    cert: fs.readFileSync('./nginx-selfsigned.crt')
-                                }, function(req, res) {
+var server = http2.createServer(ssl, function(req, res) {
     //
     // Starting time
     //
