@@ -22,10 +22,14 @@ var http2     = require('http2'),
 promise.promisifyAll(redis.RedisClient.prototype);
 promise.promisifyAll(redis.Multi.prototype);
 var setKey = function(cb) {
-    var id  = parseInt(Math.random() * repeat),
-        ts  = Date.now(),
-        obj = {hostname: hostname, pid: pid, ts: ts};
+    var id       = parseInt(Math.random() * repeat),
+        ts       = Date.now(),
+        obj      = {hostname: hostname, pid: pid, ts: ts},
+        startAtR = process.hrtime();
     client.hmsetAsync(id, obj).then(function(res) {
+        var diffR = process.hrtime(startAtN),
+            timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
+        res.setHeader('X-Redis-Time', timeR.toFixed(3));
         if (res === 'OK') {
             cb(true);
         }
@@ -37,8 +41,12 @@ var setKey = function(cb) {
     });
 };
 var getKey = function(cb) {
-    var id = parseInt(Math.random() * repeat);
+    var id       = parseInt(Math.random() * repeat),
+        startAtR = process.hrtime();
     client.hgetallAsync(id).then(function(res) {
+        var diffR = process.hrtime(startAtN),
+            timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
+        res.setHeader('X-Redis-Time', timeR.toFixed(3));
         cb(true, (res === null) ? {} : res);
     }, function(err) {
         cb(false, {});
@@ -51,17 +59,17 @@ var server = http2.createServer({
     //
     // Starting time
     //
-    var startAt = process.hrtime();
+    var startAtN = process.hrtime();
     onHeaders(res, function onHeaders() {
         //
         // Ending time
         //
-        var diff = process.hrtime(startAt),
-            time = diff[0] * 1e3 + diff[1] * 1e-6 + offset;
+        var diffN = process.hrtime(startAtN),
+            timeN = diffN[0] * 1e3 + diffN[1] * 1e-6 + offset;
         //
         // Include duration into Headers
         //
-        res.setHeader('X-Node-Time', time.toFixed(3));
+        res.setHeader('X-Node-Time', timeN.toFixed(3));
     });
     //
     // Set headers
