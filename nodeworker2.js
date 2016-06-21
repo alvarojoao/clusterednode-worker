@@ -27,8 +27,8 @@ var client = redis.createClient({
                                     host:     'raspberrypi1',
                                     prefix:   'clusterednode:',
                                     password: 'N0d3p0c',
-                                    db:       0,
-                                    tls:      ssl
+                                    db:       0
+                                    //,tls:      ssl
                                 });
 client.on("error", function(err) {
     console.log("redis.io Error: " + err);
