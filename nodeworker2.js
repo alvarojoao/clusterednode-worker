@@ -20,8 +20,8 @@ var http2     = require('http2'),
         pid:      pid
     };
 var ssl = {
-    key:  fs.readFileSync('./nginx-selfsigned.key', encoding = 'ascii'),
-    cert: fs.readFileSync('./nginx-selfsigned.crt', encoding = 'ascii')
+    key:  fs.readFileSync('./nginx-selfsigned.key'),
+    cert: fs.readFileSync('./nginx-selfsigned.crt')
 };
 var client = redis.createClient({
                                     host:     'raspberrypi1',
