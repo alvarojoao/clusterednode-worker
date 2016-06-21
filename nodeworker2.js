@@ -27,7 +27,7 @@ var setKey = function(cb) {
         obj      = {hostname: hostname, pid: pid, ts: ts},
         startAtR = process.hrtime();
     client.hmsetAsync(id, obj).then(function(res) {
-        var diffR = process.hrtime(startAtN),
+        var diffR = process.hrtime(startAtR),
             timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
         res.setHeader('X-Redis-Time', timeR.toFixed(3));
         if (res === 'OK') {
@@ -44,7 +44,7 @@ var getKey = function(cb) {
     var id       = parseInt(Math.random() * repeat),
         startAtR = process.hrtime();
     client.hgetallAsync(id).then(function(res) {
-        var diffR = process.hrtime(startAtN),
+        var diffR = process.hrtime(startAtR),
             timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
         res.setHeader('X-Redis-Time', timeR.toFixed(3));
         cb(true, (res === null) ? {} : res);
