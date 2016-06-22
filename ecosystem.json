@@ -9,11 +9,13 @@
     "exec_mode"  : "cluster",
     "env": {
       "NODEPORT": 8010,
+      "REDIS_SSLTUNNEL": true,
       "TIMEOFFSET": 0.0,
       "NODE_ENV": "development"
     },
     "env_production": {
       "NODEPORT": 8010,
+      "REDIS_SSLTUNNEL": true,
       "TIMEOFFSET": 0.0,
       "NODE_ENV": "production"
     }

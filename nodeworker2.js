@@ -23,8 +23,9 @@ var ssl = {
     key:  fs.readFileSync('./nginx-selfsigned.key'),
     cert: fs.readFileSync('./nginx-selfsigned.crt')
 };
+var redisAddress = (process.env.REDIS_SSLTUNNEL) ? '127.0.0.1' : '192.168.69.245';
 var client = redis.createClient({
-                                    host:     '127.0.0.1',
+                                    host:     redisAddress,
                                     prefix:   'clusterednode:',
                                     password: 'N0d3p0c',
                                     db:       0
