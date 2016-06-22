@@ -11,7 +11,7 @@ var http2     = require('http2'),
     fs        = require('fs'),
     tls       = require('tls'),
     redis     = require('redis'),
-    repeat    = 100,
+    hashSize  = process.env.HREDIS_HASHSIZE,
     offset    = parseFloat(process.env.TIMEOFFSET),
     hostname  = require('os').hostname(),
     pid       = process.pid,
@@ -35,7 +35,7 @@ client.on("error", function(err) {
 promise.promisifyAll(redis.RedisClient.prototype);
 promise.promisifyAll(redis.Multi.prototype);
 var setKey = function(cb, respon) {
-    var id       = parseInt(Math.random() * repeat),
+    var id       = parseInt(Math.random() * hashSize),
         ts       = Date.now(),
         obj      = {hostname: hostname, pid: pid, ts: ts},
         startAtR = process.hrtime();
@@ -54,7 +54,7 @@ var setKey = function(cb, respon) {
     });
 };
 var getKey = function(cb, respon) {
-    var id       = parseInt(Math.random() * repeat),
+    var id       = parseInt(Math.random() * hashSize),
         startAtR = process.hrtime();
     client.hgetallAsync(id).then(function(res) {
         var diffR = process.hrtime(startAtR),
