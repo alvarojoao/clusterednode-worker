@@ -12,7 +12,7 @@
       "REDIS_SSLTUNNEL": "127.0.0.1",
       //      "REDIS_SSLTUNNEL": "192.168.69.245",
       "TIMEOFFSET": 0.0,
-      "REDIS_HASHSIZE": 1024,
+      "REDIS_HASHSIZE": 64,
       "NODE_ENV": "development"
     },
     "env_production": {
@@ -20,7 +20,7 @@
       "REDIS_SSLTUNNEL": "127.0.0.1",
       //      "REDIS_SSLTUNNEL": "192.168.69.245",
       "TIMEOFFSET": 0.0,
-      "REDIS_HASHSIZE": 1024,
+      "REDIS_HASHSIZE": 64,
       "NODE_ENV": "production"
     }
   }],
