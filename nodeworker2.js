@@ -83,14 +83,18 @@ var messageHandler = function(msg, resp, act, obj) {
     resp.end(JSON.stringify(msg));
 };
 //
+// Key generator
+//
+var keyGenerator = function() {
+    return parseInt(Math.random() * hashSize);
+};
+//
 // Encapsulates HMSET call
 //
 var redisSet = function(msg, respon) {
-    var key      = parseInt(Math.random() * hashSize),
-        ts       = Date.now(),
-        obj      = {hostname: hostname, pid: pid, ts: ts},
+    var obj      = {hostname: hostname, pid: pid, ts: Date.now()},
         startAtR = process.hrtime();
-    cluster.hmset(key, obj).then(function(res) {
+    cluster.hmset(keyGenerator(), obj).then(function(res) {
         createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         messageHandler(msg, respon, (res === 'OK') ? 'SET' : 'ERR', {});
     }, function(err) {
@@ -103,9 +107,8 @@ var redisSet = function(msg, respon) {
 // Encapsulates HGETALL call
 //
 var redisGet = function(msg, respon) {
-    var key      = parseInt(Math.random() * hashSize),
-        startAtR = process.hrtime();
-    cluster.hgetall(key).then(function(res) {
+    var startAtR = process.hrtime();
+    cluster.hgetall(keyGenerator()).then(function(res) {
         createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         messageHandler(msg, respon, 'GET', (res === '') ? {} : res);
     }, function(err) {
@@ -118,9 +121,8 @@ var redisGet = function(msg, respon) {
 // Encapsulates PIPELINE call
 //
 var redisPipeline = function(msg, respon) {
-    var key      = parseInt(Math.random() * hashSize),
-        ts       = Date.now(),
-        obj      = {hostname: hostname, pid: pid, ts: ts},
+    var key      = keyGenerator(),
+        obj      = {hostname: hostname, pid: pid, ts: Date.now()},
         startAtR = process.hrtime(),
         promise  = cluster.pipeline().hgetall(key).hmset(key, obj).exec();
     promise.then(function(res) {
@@ -136,9 +138,8 @@ var redisPipeline = function(msg, respon) {
 // Encapsulates TRANSACTION call
 //
 var redisTransaction = function(msg, respon) {
-    var key      = parseInt(Math.random() * hashSize),
-        ts       = Date.now(),
-        obj      = {hostname: hostname, pid: pid, ts: ts},
+    var key      = keyGenerator(),
+        obj      = {hostname: hostname, pid: pid, ts: Date.now()},
         startAtR = process.hrtime(),
         promise  = cluster.multi().hgetall(key).hmset(key, obj).exec();
     promise.then(function(res) {
@@ -170,14 +171,11 @@ var server = http2.createServer(ssl, function(req, res) {
     //
     // Starting HTTP/2 time
     //
-    var startAtN = process.hrtime();
-    //
-    // Prepare message
-    //
-    var msg = {
-        hostname: hostname,
-        pid:      pid
-    };
+    var startAtN = process.hrtime(),
+        msg      = {
+            hostname: hostname,
+            pid:      pid
+        };
     //
     // Include AngularJS timer when it's ready to send back the results
     //
