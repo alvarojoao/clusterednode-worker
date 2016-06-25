@@ -19,7 +19,6 @@ var http2        = require('http2'),
         {port: 6375, host: "127.0.0.1"},
         {port: 6374, host: "127.0.0.1"}
     ],
-    offset       = parseFloat(process.env.TIMEOFFSET),
     hostname     = require('os').hostname(),
     pid          = process.pid,
     redisReady   = false,
@@ -83,11 +82,11 @@ var createDiffHrtimeHeader = function(header, start, response) {
 // Encapsulates HMSET call
 //
 var redisSet = function(cb, respon) {
-    var id       = parseInt(Math.random() * hashSize),
+    var key      = parseInt(Math.random() * hashSize),
         ts       = Date.now(),
         obj      = {hostname: hostname, pid: pid, ts: ts},
         startAtR = process.hrtime();
-    cluster.hmset(id, obj).then(function(res) {
+    cluster.hmset(key, obj).then(function(res) {
         createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         if (res === 'OK') {
             cb(true);
@@ -105,9 +104,9 @@ var redisSet = function(cb, respon) {
 // Encapsulates HGETALL call
 //
 var redisGet = function(cb, respon) {
-    var id       = parseInt(Math.random() * hashSize),
+    var key      = parseInt(Math.random() * hashSize),
         startAtR = process.hrtime();
-    cluster.hgetall(id).then(function(res) {
+    cluster.hgetall(key).then(function(res) {
         createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         cb(true, (res === '') ? {} : res);
     }, function(err) {
@@ -120,15 +119,14 @@ var redisGet = function(cb, respon) {
 // Encapsulates PIPELINE call
 //
 var redisPipeline = function(cb, respon) {
-    var id1      = parseInt(Math.random() * hashSize),
-        id2      = parseInt(Math.random() * hashSize),
+    var key      = parseInt(Math.random() * hashSize),
         ts       = Date.now(),
         obj      = {hostname: hostname, pid: pid, ts: ts},
         startAtR = process.hrtime(),
-        promise  = cluster.pipeline().hmset(id1, obj).hgetall(id2).exec();
+        promise  = cluster.pipeline().hgetall(key).hmset(key, obj).exec();
     promise.then(function(res) {
         createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
-        cb(true, (res.length === 0) ? {} : res[1][1]);
+        cb(true, (res.length === 0) ? {} : res[0][1]);
     }, function(err) {
         createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         console.log(err);
@@ -139,15 +137,14 @@ var redisPipeline = function(cb, respon) {
 // Encapsulates TRANSACTION call
 //
 var redisTransaction = function(cb, respon) {
-    var id1      = parseInt(Math.random() * hashSize),
-        id2      = parseInt(Math.random() * hashSize),
+    var key      = parseInt(Math.random() * hashSize),
         ts       = Date.now(),
         obj      = {hostname: hostname, pid: pid, ts: ts},
         startAtR = process.hrtime(),
-        promise  = cluster.multi().hmset(id1, obj).hgetall(id2).exec();
+        promise  = cluster.multi().hgetall(key).hmset(key, obj).exec();
     promise.then(function(res) {
         createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
-        cb(true, (res.length === 0) ? {} : res[1][1]);
+        cb(true, (res.length === 0) ? {} : res[0][1]);
     }, function(err) {
         createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         console.log(err);
@@ -162,16 +159,11 @@ var server = http2.createServer(ssl, function(req, res) {
     // Starting HTTP/2 time
     //
     var startAtN = process.hrtime();
+    //
+    // Include AngularJS timer when it's ready to send back the results
+    //
     onHeaders(res, function onHeaders() {
-        //
-        // Ending HTTP/2 time - just before sending back final stream
-        //
-        var diffN = process.hrtime(startAtN),
-            timeN = diffN[0] * 1e3 + diffN[1] * 1e-6;
-        //
-        // Include duration into Headers
-        //
-        res.setHeader('X-Node-Time', timeN.toFixed(3));
+        createDiffHrtimeHeader('X-Node-Time', startAtN, res);
     });
     //
     // Set headers
@@ -193,12 +185,10 @@ var server = http2.createServer(ssl, function(req, res) {
         if (Math.random() < 0.25) {
             // Set key
             redisSet(function(r) {
-                if (r) {
+                if (r)
                     msg.redisAction = 'SET';
-                }
-                else {
+                else
                     msg.redisAction = 'ERR';
-                }
                 msg.redisObject = {};
                 //
                 // Send message
@@ -209,12 +199,10 @@ var server = http2.createServer(ssl, function(req, res) {
         else if (Math.random() < 0.5) {
             // Get key
             redisGet(function(r, obj) {
-                if (r) {
+                if (r)
                     msg.redisAction = 'GET';
-                }
-                else {
+                else
                     msg.redisAction = 'ERR';
-                }
                 msg.redisObject = obj;
                 //
                 // Send message
@@ -225,12 +213,10 @@ var server = http2.createServer(ssl, function(req, res) {
         else if (Math.random() < 0.75) {
             // Pipeline
             redisPipeline(function(r, obj) {
-                if (r) {
+                if (r)
                     msg.redisAction = 'PPL';
-                }
-                else {
+                else
                     msg.redisAction = 'ERR';
-                }
                 msg.redisObject = obj;
                 //
                 // Send message
@@ -241,12 +227,10 @@ var server = http2.createServer(ssl, function(req, res) {
         else {
             // Transaction
             redisTransaction(function(r, obj) {
-                if (r) {
+                if (r)
                     msg.redisAction = 'TRN';
-                }
-                else {
+                else
                     msg.redisAction = 'ERR';
-                }
                 msg.redisObject = obj;
                 //
                 // Send message
