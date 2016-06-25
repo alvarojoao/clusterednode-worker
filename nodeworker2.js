@@ -182,61 +182,77 @@ var server = http2.createServer(ssl, function(req, res) {
         //
         // Select random service (read or write from REDIS)
         //
-        if (Math.random() < 0.25) {
-            // Set key
-            redisSet(function(r) {
-                if (r)
-                    msg.redisAction = 'SET';
-                else
-                    msg.redisAction = 'ERR';
-                msg.redisObject = {};
-                //
-                // Send message
-                //
-                res.end(JSON.stringify(msg));
-            }, res);
-        }
-        else if (Math.random() < 0.5) {
-            // Get key
-            redisGet(function(r, obj) {
-                if (r)
-                    msg.redisAction = 'GET';
-                else
-                    msg.redisAction = 'ERR';
-                msg.redisObject = obj;
-                //
-                // Send message
-                //
-                res.end(JSON.stringify(msg));
-            }, res);
-        }
-        else if (Math.random() < 0.75) {
-            // Pipeline
-            redisPipeline(function(r, obj) {
-                if (r)
-                    msg.redisAction = 'PPL';
-                else
-                    msg.redisAction = 'ERR';
-                msg.redisObject = obj;
-                //
-                // Send message
-                //
-                res.end(JSON.stringify(msg));
-            }, res);
-        }
-        else {
-            // Transaction
-            redisTransaction(function(r, obj) {
-                if (r)
-                    msg.redisAction = 'TRN';
-                else
-                    msg.redisAction = 'ERR';
-                msg.redisObject = obj;
-                //
-                // Send message
-                //
-                res.end(JSON.stringify(msg));
-            }, res);
+        switch (parseInt(Math.random() * 10)) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                // Get key
+                redisGet(function(r, obj) {
+                    if (r) {
+                        msg.redisAction = 'GET';
+                    }
+                    else {
+                        msg.redisAction = 'ERR';
+                    }
+                    msg.redisObject = obj;
+                    //
+                    // Send message
+                    //
+                    res.end(JSON.stringify(msg));
+                }, res);
+                break;
+            case 6:
+            case 7:
+                // Set key
+                redisSet(function(r) {
+                    if (r) {
+                        msg.redisAction = 'SET';
+                    }
+                    else {
+                        msg.redisAction = 'ERR';
+                    }
+                    msg.redisObject = {};
+                    //
+                    // Send message
+                    //
+                    res.end(JSON.stringify(msg));
+                }, res);
+                break;
+            case 8:
+                // Pipeline (get & set)
+                redisPipeline(function(r, obj) {
+                    if (r) {
+                        msg.redisAction = 'PPL';
+                    }
+                    else {
+                        msg.redisAction = 'ERR';
+                    }
+                    msg.redisObject = obj;
+                    //
+                    // Send message
+                    //
+                    res.end(JSON.stringify(msg));
+                }, res);
+                break;
+            case 9:
+                // Transaction (set after get)
+                redisTransaction(function(r, obj) {
+                    if (r) {
+                        msg.redisAction = 'TRN';
+                    }
+                    else {
+                        msg.redisAction = 'ERR';
+                    }
+                    msg.redisObject = obj;
+                    //
+                    // Send message
+                    //
+                    res.end(JSON.stringify(msg));
+                }, res);
+                break;
         }
     }
     else {
