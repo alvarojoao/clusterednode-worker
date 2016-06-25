@@ -72,6 +72,14 @@ cluster.on("node error", function(err) {
     console.log("redis.io Node Error: " + err);
 });
 //
+// Create diff hrtime header
+//
+var createDiffHrtimeHeader = function(header, start, response) {
+    var diffR = process.hrtime(start),
+        timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
+    response.setHeader(header, timeR.toFixed(3));
+};
+//
 // Encapsulates HMSET call
 //
 var redisSet = function(cb, respon) {
@@ -80,9 +88,7 @@ var redisSet = function(cb, respon) {
         obj      = {hostname: hostname, pid: pid, ts: ts},
         startAtR = process.hrtime();
     cluster.hmset(id, obj).then(function(res) {
-        var diffR = process.hrtime(startAtR),
-            timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
-        respon.setHeader('X-Redis-Time', timeR.toFixed(3));
+        createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         if (res === 'OK') {
             cb(true);
         }
@@ -90,6 +96,8 @@ var redisSet = function(cb, respon) {
             cb(false);
         }
     }, function(err) {
+        createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
+        console.log(err);
         cb(false);
     });
 };
@@ -100,11 +108,11 @@ var redisGet = function(cb, respon) {
     var id       = parseInt(Math.random() * hashSize),
         startAtR = process.hrtime();
     cluster.hgetall(id).then(function(res) {
-        var diffR = process.hrtime(startAtR),
-            timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
-        respon.setHeader('X-Redis-Time', timeR.toFixed(3));
+        createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         cb(true, (res === '') ? {} : res);
     }, function(err) {
+        createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
+        console.log(err);
         cb(false, {});
     });
 };
@@ -119,11 +127,11 @@ var redisPipeline = function(cb, respon) {
         startAtR = process.hrtime(),
         promise  = cluster.pipeline().hmset(id1, obj).hgetall(id2).exec();
     promise.then(function(res) {
-        var diffR = process.hrtime(startAtR),
-            timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
-        respon.setHeader('X-Redis-Time', timeR.toFixed(3));
+        createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         cb(true, (res.length === 0) ? {} : res[1][1]);
     }, function(err) {
+        createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
+        console.log(err);
         cb(false, {});
     });
 };
@@ -138,11 +146,11 @@ var redisTransaction = function(cb, respon) {
         startAtR = process.hrtime(),
         promise  = cluster.multi().hmset(id1, obj).hgetall(id2).exec();
     promise.then(function(res) {
-        var diffR = process.hrtime(startAtR),
-            timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
-        respon.setHeader('X-Redis-Time', timeR.toFixed(3));
+        createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
         cb(true, (res.length === 0) ? {} : res[1][1]);
     }, function(err) {
+        createDiffHrtimeHeader('X-Redis-Time', startAtR, respon);
+        console.log(err);
         cb(false, {});
     });
 };
