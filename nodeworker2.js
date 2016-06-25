@@ -136,7 +136,7 @@ var redisTransaction = function(cb, respon) {
         ts       = Date.now(),
         obj      = {hostname: hostname, pid: pid, ts: ts},
         startAtR = process.hrtime(),
-        promise  = cluster.multi({pipeline: false}).hmset(id1, obj).hgetall(id2).exec();
+        promise  = cluster.multi().hmset(id1, obj).hgetall(id2).exec();
     promise.then(function(res) {
         var diffR = process.hrtime(startAtR),
             timeR = diffR[0] * 1e3 + diffR[1] * 1e-6;
