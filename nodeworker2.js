@@ -41,13 +41,7 @@ var sslCerts = {
 //
 // Connect to Socket.IO proxy to send node execution notifications
 //
-var socket = require('socket.io-client')('https://192.168.69.246:32401');
-socket.on('error', function(err) {
-    console.log(err);
-});
-socket.on('connect', function() {
-    console.log('socket.io connected');
-});
+var socket = require('socket.io-client')('http://192.168.69.246:32401');
 //
 // Create redis cluster client
 //
