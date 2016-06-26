@@ -41,7 +41,7 @@ var sslCerts = {
 //
 // Connect to Socket.IO proxy to send node execution notifications
 //
-var socket = require('socket.io-client')('https://giancarlobonansea.homeip.net:32401');
+var socket = require('socket.io-client')('https://192.168.69.246:32401');
 //
 // Create redis cluster client
 //
@@ -94,7 +94,10 @@ var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
     jsonMsg.redisAction = redisAction;
     jsonMsg.redisObject = redisValue;
     httpResponse.end(JSON.stringify(jsonMsg));
-    socket.emit('exec', {pi: hostname, pid: pid});
+    socket.emit('exec', {
+        pi:  hostname,
+        pid: pid
+    });
 };
 //
 // Key generator
@@ -146,9 +149,10 @@ var redisGetCall = function(jsonMsg, httpResponse) {
 // Encapsulates PIPELINE call
 //
 var redisPipelineCall = function(jsonMsg, httpResponse) {
-    var redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
+    var redisKey       = redisKeyGenerator(),
+        redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
         startRedisCall = process.hrtime(),
-        promise        = cluster.pipeline().hgetall(redisKeyGenerator()).hmset(redisKeyGenerator(), redisValue).exec();
+        promise        = cluster.pipeline().hgetall(redisKey).hmset(redisKey, redisValue).exec();
     promise.then(function(redisMessage) {
         sendRedisResults(jsonMsg, httpResponse, raPIPELINE, (redisMessage.length === 0) ? {} : redisMessage[0][1], startRedisCall);
     }, function(redisError) {
