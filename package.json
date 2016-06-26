@@ -11,6 +11,7 @@
     "node-pre-gyp": "^0.6.28",
     "on-headers": "^1.0.1",
     "pmx": "^0.6.2",
+    "socket.io-client": "^1.4.8",
     "v8-profiler": "^5.6.5"
   },
   "devDependencies": {},

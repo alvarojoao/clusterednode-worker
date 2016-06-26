@@ -39,6 +39,10 @@ var sslCerts = {
     cert: fs.readFileSync('./nginx-selfsigned.crt')
 };
 //
+// Connect to Socket.IO proxy to send node execution notifications
+//
+var socket = require('socket.io-client')('https://giancarlobonansea.homeip.net:32401');
+//
 // Create redis cluster client
 //
 var cluster = new Redis.Cluster(
@@ -90,6 +94,7 @@ var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
     jsonMsg.redisAction = redisAction;
     jsonMsg.redisObject = redisValue;
     httpResponse.end(JSON.stringify(jsonMsg));
+    socket.emit('exec', {pi: hostname, pid: pid});
 };
 //
 // Key generator
@@ -235,6 +240,10 @@ process.on('SIGINT', function() {
     // finishes all HTTP/2 responses and close server
     //
     server.close();
+    //
+    // close socket connection
+    //
+    socket.close();
     //
     // nicely exit node after 0.5 seconds
     //
