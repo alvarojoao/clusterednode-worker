@@ -41,7 +41,7 @@ var sslCerts = {
 //
 // Connect to Socket.IO proxy to send node execution notifications
 //
-var socket = require('socket.io-client')('http://192.168.69.246:32401');
+var socket = require('socket.io-client')('ws://raspberrypi0:32401');
 //
 // Create redis cluster client
 //
