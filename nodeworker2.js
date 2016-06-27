@@ -8,11 +8,11 @@ require('pmx').init({
                     });
 var http2         = require('http2'),
     onHeaders     = require('on-headers'),
-    fs            = require('fs'),
-    tls           = require('tls'),
-    Redis         = require('ioredis'),
-    redisHashSize = process.env.REDIS_HASHSIZE,
-    redisCluster  = [
+    fs              = require('fs'),
+    tls             = require('tls'),
+    Redis           = require('ioredis'),
+    redisHashSize   = process.env.REDIS_HASHSIZE,
+    redisCluster    = [
         {port: 6379, host: "127.0.0.1"},
         {port: 6378, host: "127.0.0.1"},
         {port: 6377, host: "127.0.0.1"},
@@ -20,17 +20,20 @@ var http2         = require('http2'),
         {port: 6375, host: "127.0.0.1"},
         {port: 6374, host: "127.0.0.1"}
     ],
-    hostname      = require('os').hostname(),
-    pid           = process.pid,
-    redisReady    = false,
-    rmOK          = 'OK',
-    rmERROR       = 'ERR',
-    raSET         = 'SET',
-    raGET         = 'GET',
-    raTRANSACTION = 'TRN',
-    raPIPELINE    = 'PPL',
-    hdREDIS       = 'X-Redis-Time',
-    hdNODE        = 'X-Node-Time';
+    hostname        = require('os').hostname(),
+    pid             = process.pid,
+    notification    = {h: hostname, p: pid},
+    redisReady      = false,
+    rmOK            = 'OK',
+    rmERROR         = 'ERR',
+    raSET           = 'SET',
+    raGET           = 'GET',
+    raTRANSACTION   = 'TRN',
+    raPIPELINE      = 'PPL',
+    hdREDIS         = 'X-Redis-Time',
+    hdNODE          = 'X-Node-Time',
+    debounceTime    = 500,
+    debounceTrigger = false;
 //
 // Defines certificates for enabling TLSv1.2
 //
@@ -94,10 +97,13 @@ var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
     jsonMsg.redisAction = redisAction;
     jsonMsg.redisObject = redisValue;
     httpResponse.end(JSON.stringify(jsonMsg));
-    socket.emit('exec', {
-        pi:  hostname,
-        pid: pid
-    });
+    if (!debounceTrigger) {
+        debounceTrigger = true;
+        socket.emit('exec', notification);
+        setTimeout(function() {
+            debounceTrigger = false;
+        }, debounceTime);
+    }
 };
 //
 // Key generator
