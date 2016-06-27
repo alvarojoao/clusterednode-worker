@@ -99,7 +99,7 @@ var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
     httpResponse.end(JSON.stringify(jsonMsg));
     if (!debounceTrigger) {
         debounceTrigger = true;
-        socket.volatile.emit('exec', notification);
+        socket.emit('exec', notification);
         setTimeout(function() {
             debounceTrigger = false;
         }, debounceTime);
