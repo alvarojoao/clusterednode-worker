@@ -12,7 +12,7 @@ var http2         = require('http2'),
     tls             = require('tls'),
     Redis           = require('ioredis'),
     redisHashSize   = process.env.REDIS_HASHSIZE,
-    redisCluster    = [
+    redisCluster  = [
         {port: 6379, host: "127.0.0.1"},
         {port: 6378, host: "127.0.0.1"},
         {port: 6377, host: "127.0.0.1"},
@@ -20,23 +20,17 @@ var http2         = require('http2'),
         {port: 6375, host: "127.0.0.1"},
         {port: 6374, host: "127.0.0.1"}
     ],
-    hostname        = require('os').hostname(),
-    pid             = process.pid,
-    notification    = {
-        h: hostname,
-        p: pid
-    },
-    redisReady      = false,
-    rmOK            = 'OK',
-    rmERROR         = 'ERR',
-    raSET           = 'SET',
-    raGET           = 'GET',
-    raTRANSACTION   = 'TRN',
-    raPIPELINE      = 'PPL',
-    hdREDIS         = 'X-Redis-Time',
-    hdNODE          = 'X-Node-Time',
-    debounceTime    = 500,
-    debounceTrigger = false;
+    hostname      = require('os').hostname(),
+    pid           = process.pid,
+    redisReady    = false,
+    rmOK          = 'OK',
+    rmERROR       = 'ERR',
+    raSET         = 'SET',
+    raGET         = 'GET',
+    raTRANSACTION = 'TRN',
+    raPIPELINE    = 'PPL',
+    hdREDIS       = 'X-Redis-Time',
+    hdNODE        = 'X-Node-Time';
 //
 // Defines certificates for enabling TLSv1.2
 //
@@ -44,13 +38,6 @@ var sslCerts = {
     key:  fs.readFileSync('./nginx-selfsigned.key'),
     cert: fs.readFileSync('./nginx-selfsigned.crt')
 };
-//
-// Connect to Socket.IO proxy to send node execution notifications
-//
-var socket = require('socket.io-client')('ws://raspberrypi0:32401');
-socket.on('connect', function() {
-    socket.emit('register', notification);
-});
 //
 // Create redis cluster client
 //
@@ -103,13 +90,6 @@ var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
     jsonMsg.redisAction = redisAction;
     jsonMsg.redisObject = redisValue;
     httpResponse.end(JSON.stringify(jsonMsg));
-    if (!debounceTrigger) {
-        debounceTrigger = true;
-        socket.emit('nodecall', notification);
-        setTimeout(function() {
-            debounceTrigger = false;
-        }, debounceTime);
-    }
 };
 //
 // Key generator
@@ -256,10 +236,6 @@ process.on('SIGINT', function() {
     // finishes all HTTP/2 responses and close server
     //
     server.close();
-    //
-    // close socket connection
-    //
-    socket.close();
     //
     // nicely exit node after 0.5 seconds
     //
