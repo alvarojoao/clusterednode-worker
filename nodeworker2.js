@@ -22,7 +22,10 @@ var http2         = require('http2'),
     ],
     hostname        = require('os').hostname(),
     pid             = process.pid,
-    notification    = {h: hostname, p: pid},
+    notification    = {
+        h: hostname,
+        p: pid
+    },
     redisReady      = false,
     rmOK            = 'OK',
     rmERROR         = 'ERR',
@@ -45,6 +48,9 @@ var sslCerts = {
 // Connect to Socket.IO proxy to send node execution notifications
 //
 var socket = require('socket.io-client')('ws://raspberrypi0:32401');
+socket.on('connect', function() {
+    socket.emit('register', notification);
+});
 //
 // Create redis cluster client
 //
@@ -99,7 +105,7 @@ var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
     httpResponse.end(JSON.stringify(jsonMsg));
     if (!debounceTrigger) {
         debounceTrigger = true;
-        socket.emit('exec', notification);
+        socket.emit('nodecall', notification);
         setTimeout(function() {
             debounceTrigger = false;
         }, debounceTime);
