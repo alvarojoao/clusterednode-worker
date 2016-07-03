@@ -2,6 +2,7 @@
   "apps" : [{
     "name": "clusteredAPInode",
     "cwd": "/home/pi/cluster/current",
+    "watch": false,
     "source_map_support": true,
     "script": "nodeworker2.js",
     "instances"  : 4,
