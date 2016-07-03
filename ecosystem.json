@@ -4,7 +4,6 @@
     "cwd": "/home/pi/cluster/current",
     "source_map_support": true,
     "script": "nodeworker2.js",
-    "watch": "nodeworker2.js",
     "instances"  : 4,
     "max_restarts" : 10,
     "exec_mode"  : "cluster",
