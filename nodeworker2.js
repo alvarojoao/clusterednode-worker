@@ -140,29 +140,29 @@ var redisGetCall = function(jsonMsg, httpResponse) {
 //
 // Encapsulates PIPELINE call
 //
-var redisPipelineCall = function(jsonMsg, httpResponse) {
+var redisPipelineCall = function(jM, hR) {
     var redisKey       = redisKeyGenerator(),
         redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
         startRedisCall = process.hrtime(),
         promise        = cluster.pipeline().hgetall(redisKey).hmset(redisKey, redisValue).exec();
-    promise.then(function(redisMessage) {
-        sendRedisResults(jsonMsg, httpResponse, raPIPELINE, (redisMessage.length === 0) ? {} : redisMessage[0][1], startRedisCall);
-    }, function(redisError) {
-        sendRedisError(jsonMsg, redisError, httpResponse, startRedisCall);
+    promise.then(function(rM) {
+        sendRedisResults(jM, hR, raPIPELINE, (rM.length === 0) ? {} : rM[0][1], startRedisCall);
+    }, function(rE) {
+        sendRedisError(jM, rE, hR, startRedisCall);
     });
 };
 //
 // Encapsulates TRANSACTION call
 //
-var redisTransactionCall = function(jsonMsg, httpResponse) {
+var redisTransactionCall = function(jM, hR) {
     var redisKey       = redisKeyGenerator(),
         redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
         startRedisCall = process.hrtime(),
         promise        = cluster.multi().hgetall(redisKey).hmset(redisKey, redisValue).exec();
-    promise.then(function(redisMessage) {
-        sendRedisResults(jsonMsg, httpResponse, raTRANSACTION, (redisMessage.length === 0) ? {} : redisMessage[0][1], startRedisCall);
-    }, function(redisError) {
-        sendRedisError(jsonMsg, redisError, httpResponse, startRedisCall);
+    promise.then(function(rM) {
+        sendRedisResults(jM, hR, raTRANSACTION, (rM.length === 0) ? {} : rM[0][1], startRedisCall);
+    }, function(rE) {
+        sendRedisError(jM, rE, hR, startRedisCall);
     });
 };
 //
@@ -181,46 +181,31 @@ var executionMatrix = [redisGetCall,
 //
 // Main HTTP/2 server handler
 //
-var server = http2.createServer(sslCerts, function(httpRequest, httpResponse) {
-    //
-    // Starting HTTP/2 time
-    //
+var setAllHeaders = function(hR) {
+    hR.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    hR.setHeader('Pragma', 'no-cache');
+    hR.setHeader('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT');
+    hR.setHeader("Access-Control-Allow-Origin", "*");
+    hR.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control, If-Modified-Since, X-ReqId");
+    hR.setHeader("Content-Type", "application/json");
+    hR.setHeader("X-ReqId", httpRequest.headers['x-reqid'] || "-1");
+};
+var server = http2.createServer(sslCerts, function(hRq, hR) {
     var startNodeCall = process.hrtime(),
-        jsonMsg       = {
+        jM            = {
             hostname: hostname,
             pid:      pid
         };
-    //
-    // Include AngularJS timer when it's ready to send back the results
-    //
-    onHeaders(httpResponse, function onHeaders () {
-        createDiffHrtimeHeader(hdNODE, startNodeCall, httpResponse);
+    onHeaders(hR, function onHeaders () {
+        createDiffHrtimeHeader(hdNODE, startNodeCall, hR);
     });
-    //
-    // Set headers
-    //
-    httpResponse.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    httpResponse.setHeader('Pragma', 'no-cache');
-    httpResponse.setHeader('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT');
-    httpResponse.setHeader("Access-Control-Allow-Origin", "*");
-    httpResponse.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control, If-Modified-Since, X-ReqId");
-    httpResponse.setHeader("Content-Type", "application/json");
-    httpResponse.setHeader("X-ReqId", httpRequest.headers['x-reqid'] || "-1");
-    //
-    // Check if redis is available to start sending commands
-    //
+    setAllHeaders(hR);
     if (redisReady) {
-        //
-        // Call message handler and redis commands
-        //
-        executionMatrix[(Math.random() * 10) | 0](jsonMsg, httpResponse);
+        executionMatrix[(Math.random() * 10) | 0](jM, hR);
     }
     else {
-        //
-        // redis is not ready - return error message without crashing
-        //
-        httpResponse.setHeader(hdREDIS, 0);
-        messageHandler(jsonMsg, httpResponse, rmERROR, {});
+        hR.setHeader(hdREDIS, 0);
+        messageHandler(jM, hR, rmERROR, {});
     }
 }).listen(process.env.NODEPORT);
 //
