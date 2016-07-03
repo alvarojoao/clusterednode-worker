@@ -188,7 +188,7 @@ var setAllHeaders = function(hR) {
     hR.setHeader("Access-Control-Allow-Origin", "*");
     hR.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control, If-Modified-Since, X-ReqId");
     hR.setHeader("Content-Type", "application/json");
-    hR.setHeader("X-ReqId", httpRequest.headers['x-reqid'] || "-1");
+    hR.setHeader("X-ReqId", hR.headers['x-reqid'] || "-1");
 };
 var server = http2.createServer(sslCerts, function(hRq, hR) {
     var startNodeCall = process.hrtime(),
