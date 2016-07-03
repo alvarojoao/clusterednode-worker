@@ -30,3 +30,4 @@ uglifyjs node_modules/ioredis/lib/scan_stream.js --screw-ie8 -c -m -r '$,require
 uglifyjs node_modules/ioredis/lib/script.js --screw-ie8 -c -m -r '$,require,exports' -o node_modules/ioredis/lib/script.js
 uglifyjs node_modules/ioredis/lib/subscription_set.js --screw-ie8 -c -m -r '$,require,exports' -o node_modules/ioredis/lib/subscription_set.js
 uglifyjs node_modules/ioredis/lib/transaction.js --screw-ie8 -c -m -r '$,require,exports' -o node_modules/ioredis/lib/transaction.js
+echo Finished minifying files
