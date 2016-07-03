@@ -6,14 +6,15 @@ require('pmx').init({
                         network:       true, // Network monitoring at the application level
                         ports:         false // Shows which ports your app is listening on (default: false)
                     });
-var http2         = require('http2'),
-    onHeaders     = require('on-headers'),
-    fs            = require('fs'),
-    tls           = require('tls'),
-    Redis         = require('ioredis'),
+var http2        = require('http2'),
+    onHeaders    = require('on-headers'),
+    fs           = require('fs'),
+    tls          = require('tls'),
+    url          = require('url'),
+    Redis        = require('ioredis'),
     //    naffinity     = require('nodeaffinity'),
-    redisHashSize = process.env.REDIS_HASHSIZE,
-    redisCluster  = [
+    //redisHashSize = process.env.REDIS_HASHSIZE,
+    redisCluster = [
         {port: 6379, host: "127.0.0.1"},
         {port: 6378, host: "127.0.0.1"},
         {port: 6377, host: "127.0.0.1"},
@@ -21,13 +22,13 @@ var http2         = require('http2'),
         {port: 6375, host: "127.0.0.1"},
         {port: 6374, host: "127.0.0.1"}
     ],
-    os            = require('os'),
-    hostname      = os.hostname(),
-    netIf         = os.networkInterfaces().eth1[0].address,
-    pid           = process.pid,
-    redisReady    = false,
-    rmOK          = 'OK',
-    rmERROR       = 'ERR',
+    os           = require('os'),
+    hostname     = os.hostname(),
+    netIf        = os.networkInterfaces().eth1[0].address,
+    pid          = process.pid,
+    redisReady   = false,
+    rmOK         = 'OK',
+    rmERROR      = 'ERR',
     raSET         = 'SET',
     raGET         = 'GET',
     raTRANSACTION = 'TRN',
@@ -101,9 +102,9 @@ var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
 //
 // Key generator
 //
-var redisKeyGenerator = function() {
-    return (Math.random() * redisHashSize) | 0;
-};
+// var redisKeyGenerator = function() {
+//     return (Math.random() * redisHashSize) | 0;
+// };
 //
 // Send default ERR response due to a Redis error
 //
@@ -122,10 +123,10 @@ var sendRedisResults = function(jsonMsg, httpResponse, redisAction, redisValue, 
 //
 // Encapsulates HMSET call
 //
-var redisSetCall = function(jsonMsg, httpResponse) {
+var redisSetCall = function(jsonMsg, httpResponse, param) {
     var redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
         startRedisCall = process.hrtime(),
-        promise        = cluster.hmset(redisKeyGenerator(), redisValue);
+        promise        = cluster.hmset(param, redisValue);
     promise.then(function(redisMessage) {
         sendRedisResults(jsonMsg, httpResponse, (redisMessage === rmOK) ? raSET : rmERROR, {}, startRedisCall);
     }, function(redisError) {
@@ -135,9 +136,9 @@ var redisSetCall = function(jsonMsg, httpResponse) {
 //
 // Encapsulates HGETALL call
 //
-var redisGetCall = function(jsonMsg, httpResponse) {
+var redisGetCall = function(jsonMsg, httpResponse, param) {
     var startRedisCall = process.hrtime(),
-        promise        = cluster.hgetall(redisKeyGenerator());
+        promise        = cluster.hgetall(param);
     promise.then(function(redisMessage) {
         sendRedisResults(jsonMsg, httpResponse, raGET, (redisMessage === '') ? {} : redisMessage, startRedisCall);
     }, function(redisError) {
@@ -147,11 +148,10 @@ var redisGetCall = function(jsonMsg, httpResponse) {
 //
 // Encapsulates PIPELINE call
 //
-var redisPipelineCall = function(jM, hR) {
-    var redisKey       = redisKeyGenerator(),
-        redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
+var redisPipelineCall = function(jM, hR, param) {
+    var redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
         startRedisCall = process.hrtime(),
-        promise        = cluster.pipeline().hgetall(redisKey).hmset(redisKey, redisValue).exec();
+        promise        = cluster.pipeline().hgetall(param).hmset(param, redisValue).exec();
     promise.then(function(rM) {
         sendRedisResults(jM, hR, raPIPELINE, (rM.length === 0) ? {} : rM[0][1], startRedisCall);
     }, function(rE) {
@@ -161,11 +161,10 @@ var redisPipelineCall = function(jM, hR) {
 //
 // Encapsulates TRANSACTION call
 //
-var redisTransactionCall = function(jM, hR) {
-    var redisKey       = redisKeyGenerator(),
-        redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
+var redisTransactionCall = function(jM, hR, param) {
+    var redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
         startRedisCall = process.hrtime(),
-        promise        = cluster.multi().hgetall(redisKey).hmset(redisKey, redisValue).exec();
+        promise        = cluster.multi().hgetall(param).hmset(param, redisValue).exec();
     promise.then(function(rM) {
         sendRedisResults(jM, hR, raTRANSACTION, (rM.length === 0) ? {} : rM[0][1], startRedisCall);
     }, function(rE) {
@@ -176,12 +175,6 @@ var redisTransactionCall = function(jM, hR) {
 // Prepare execution function stack
 //
 var executionMatrix = [redisGetCall,
-                       redisGetCall,
-                       redisGetCall,
-                       redisGetCall,
-                       redisGetCall,
-                       redisGetCall,
-                       redisSetCall,
                        redisSetCall,
                        redisPipelineCall,
                        redisTransactionCall];
@@ -202,13 +195,16 @@ var server = http2.createServer(sslCerts, function(hRq, hR) {
         jM            = {
             hostname: hostname,
             pid:      pid
-        };
+        },
+        params        = url.parse(hRq.url, true).query,
+        o             = params.o || 0,
+        p             = params.p || 0;
     onHeaders(hR, function onHeaders () {
         createDiffHrtimeHeader(hdNODE, startNodeCall, hR);
     });
     setAllHeaders(hRq, hR);
     if (redisReady) {
-        executionMatrix[(Math.random() * 10) | 0](jM, hR);
+        executionMatrix[o](jM, hR, p);
     }
     else {
         hR.setHeader(hdREDIS, 0);
