@@ -11,7 +11,7 @@ var http2         = require('http2'),
     fs            = require('fs'),
     tls           = require('tls'),
     Redis         = require('ioredis'),
-    naffinity     = require('nodeaffinity'),
+    //    naffinity     = require('nodeaffinity'),
     redisHashSize = process.env.REDIS_HASHSIZE,
     redisCluster  = [
         {port: 6379, host: "127.0.0.1"},
@@ -37,7 +37,7 @@ var http2         = require('http2'),
 //
 // Set affinity to CPUs 0,1,2
 //
-naffinity.setAffinity(7);
+//naffinity.setAffinity(7);
 //
 // Defines certificates for enabling TLSv1.2
 //
