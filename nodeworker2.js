@@ -224,7 +224,7 @@ process.on('SIGINT', function() {
     //
     server.close();
     //
-    // nicely exit node after 0.5 seconds
+    // nicely exit node after 0.3 seconds
     //
-    setTimeout(function() { process.exit(0); }, 500);
+    setTimeout(function() { process.exit(0); }, 300);
 });
