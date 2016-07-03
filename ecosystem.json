@@ -10,12 +10,10 @@
     "exec_mode"  : "cluster",
     "env": {
       "NODEPORT": 8010,
-      "REDIS_HASHSIZE": 16384,
       "NODE_ENV": "development"
     },
     "env_production": {
       "NODEPORT": 8010,
-      "REDIS_HASHSIZE": 16384,
       "NODE_ENV": "production"
     }
   }],
