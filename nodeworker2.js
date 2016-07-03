@@ -13,7 +13,6 @@ var http2        = require('http2'),
     url          = require('url'),
     Redis        = require('ioredis'),
     //    naffinity     = require('nodeaffinity'),
-    //redisHashSize = process.env.REDIS_HASHSIZE,
     redisCluster = [
         {port: 6379, host: "127.0.0.1"},
         {port: 6378, host: "127.0.0.1"},
@@ -99,12 +98,6 @@ var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
     jsonMsg.redisObject = redisValue;
     httpResponse.end(JSON.stringify(jsonMsg));
 };
-//
-// Key generator
-//
-// var redisKeyGenerator = function() {
-//     return (Math.random() * redisHashSize) | 0;
-// };
 //
 // Send default ERR response due to a Redis error
 //
