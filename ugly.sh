@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-uglifyjs nodeworker2.js --screw-ie8 -c sequences,dead_code,conditionals,comparisons,unsafe_comps,evaluate,booleans,loops,unused,if_return,join_vars,collapse_vars,cascade,passes=3 -m toplevel,eval -r '$,require,exports' -o nodeworker2.js
+uglifyjs nodeworker2.js --screw-ie8 -c sequences,dead_code,conditionals,comparisons,unsafe_comps,evaluate,booleans,loops,unused,if_return,join_vars,collapse_vars,cascade,passes=3 -m toplevel,eval -r '$,require,exports' -o nodeworker2.js --source-map nodeworker2.js.map --source-map-include-sources
 uglifyjs node_modules/http2/lib/http.js --screw-ie8 -c -m -r '$,require,exports' -o node_modules/http2/lib/http.js
 uglifyjs node_modules/http2/lib/index.js --screw-ie8 -c -m -r '$,require,exports' -o node_modules/http2/lib/index.js
 uglifyjs node_modules/http2/lib/protocol/compressor.js --screw-ie8 -c -m -r '$,require,exports' -o node_modules/http2/lib/protocol/compressor.js
