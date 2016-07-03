@@ -8,10 +8,10 @@ require('pmx').init({
                     });
 var http2         = require('http2'),
     onHeaders     = require('on-headers'),
-    fs              = require('fs'),
-    tls             = require('tls'),
-    Redis           = require('ioredis'),
-    redisHashSize   = process.env.REDIS_HASHSIZE,
+    fs            = require('fs'),
+    tls           = require('tls'),
+    Redis         = require('ioredis'),
+    redisHashSize = process.env.REDIS_HASHSIZE,
     redisCluster  = [
         {port: 6379, host: "127.0.0.1"},
         {port: 6378, host: "127.0.0.1"},
@@ -20,7 +20,9 @@ var http2         = require('http2'),
         {port: 6375, host: "127.0.0.1"},
         {port: 6374, host: "127.0.0.1"}
     ],
-    hostname      = require('os').hostname(),
+    os            = require('os'),
+    hostname      = os.hostname(),
+    netIf         = os.networkInterfaces().eth1[0].address,
     pid           = process.pid,
     redisReady    = false,
     rmOK          = 'OK',
@@ -207,7 +209,7 @@ var server = http2.createServer(sslCerts, function(hRq, hR) {
         hR.setHeader(hdREDIS, 0);
         messageHandler(jM, hR, rmERROR, {});
     }
-}).listen(process.env.NODEPORT);
+}).listen(process.env.NODEPORT, netIf);
 //
 // Enables graceful stop/reload - nicely closes connections to redis and closes HTTP/2 server
 // enabling last transactions, both on redis and HTTP/2 server to be completed before exiting
