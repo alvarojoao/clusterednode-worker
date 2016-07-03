@@ -181,14 +181,14 @@ var executionMatrix = [redisGetCall,
 //
 // Main HTTP/2 server handler
 //
-var setAllHeaders = function(hR) {
+var setAllHeaders = function(hRq, hR) {
     hR.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     hR.setHeader('Pragma', 'no-cache');
     hR.setHeader('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT');
     hR.setHeader("Access-Control-Allow-Origin", "*");
     hR.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control, If-Modified-Since, X-ReqId");
     hR.setHeader("Content-Type", "application/json");
-    hR.setHeader("X-ReqId", hR.headers['x-reqid'] || "-1");
+    hR.setHeader("X-ReqId", hRq.headers['x-reqid'] || "-1");
 };
 var server = http2.createServer(sslCerts, function(hRq, hR) {
     var startNodeCall = process.hrtime(),
@@ -199,7 +199,7 @@ var server = http2.createServer(sslCerts, function(hRq, hR) {
     onHeaders(hR, function onHeaders () {
         createDiffHrtimeHeader(hdNODE, startNodeCall, hR);
     });
-    setAllHeaders(hR);
+    setAllHeaders(hRq, hR);
     if (redisReady) {
         executionMatrix[(Math.random() * 10) | 0](jM, hR);
     }
