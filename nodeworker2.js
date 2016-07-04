@@ -117,10 +117,8 @@ var sendRedisResults = function(jsonMsg, httpResponse, redisAction, redisValue, 
 // Encapsulates HMSET call
 //
 var redisSetCall = function(jsonMsg, httpResponse, param) {
-    var redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
-        startRedisCall = process.hrtime(),
-        promise        = cluster.hmset(param, redisValue);
-    promise.then(function(redisMessage) {
+    var startRedisCall = process.hrtime();
+    cluster.hmset(param, {hostname: hostname, pid: pid, ts: Date.now()}).then(function(redisMessage) {
         sendRedisResults(jsonMsg, httpResponse, (redisMessage === rmOK) ? raSET : rmERROR, {}, startRedisCall);
     }, function(redisError) {
         sendRedisError(jsonMsg, redisError, httpResponse, startRedisCall);
@@ -130,9 +128,8 @@ var redisSetCall = function(jsonMsg, httpResponse, param) {
 // Encapsulates HGETALL call
 //
 var redisGetCall = function(jsonMsg, httpResponse, param) {
-    var startRedisCall = process.hrtime(),
-        promise        = cluster.hgetall(param);
-    promise.then(function(redisMessage) {
+    var startRedisCall = process.hrtime();
+    cluster.hgetall(param).then(function(redisMessage) {
         sendRedisResults(jsonMsg, httpResponse, raGET, (redisMessage === '') ? {} : redisMessage, startRedisCall);
     }, function(redisError) {
         sendRedisError(jsonMsg, redisError, httpResponse, startRedisCall);
@@ -142,10 +139,12 @@ var redisGetCall = function(jsonMsg, httpResponse, param) {
 // Encapsulates PIPELINE call
 //
 var redisPipelineCall = function(jM, hR, param) {
-    var redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
-        startRedisCall = process.hrtime(),
-        promise        = cluster.pipeline().hgetall(param).hmset(param, redisValue).exec();
-    promise.then(function(rM) {
+    var startRedisCall = process.hrtime();
+    cluster.pipeline().hgetall(param).hmset(param, {
+        hostname: hostname,
+        pid:      pid,
+        ts:       Date.now()
+    }).exec().then(function(rM) {
         sendRedisResults(jM, hR, raPIPELINE, (rM.length === 0) ? {} : rM[0][1], startRedisCall);
     }, function(rE) {
         sendRedisError(jM, rE, hR, startRedisCall);
@@ -155,10 +154,12 @@ var redisPipelineCall = function(jM, hR, param) {
 // Encapsulates TRANSACTION call
 //
 var redisTransactionCall = function(jM, hR, param) {
-    var redisValue     = {hostname: hostname, pid: pid, ts: Date.now()},
-        startRedisCall = process.hrtime(),
-        promise        = cluster.multi().hgetall(param).hmset(param, redisValue).exec();
-    promise.then(function(rM) {
+    var startRedisCall = process.hrtime();
+    cluster.multi().hgetall(param).hmset(param, {
+        hostname: hostname,
+        pid:      pid,
+        ts:       Date.now()
+    }).exec().then(function(rM) {
         sendRedisResults(jM, hR, raTRANSACTION, (rM.length === 0) ? {} : rM[0][1], startRedisCall);
     }, function(rE) {
         sendRedisError(jM, rE, hR, startRedisCall);
