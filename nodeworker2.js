@@ -176,13 +176,9 @@ var executionMatrix = [redisGetCall,
 // Main HTTP/2 server handler
 //
 var setAllHeaders = function(hRq, hR) {
-    // hR.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    // hR.setHeader('Pragma', 'no-cache');
-    // hR.setHeader('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT');
     hR.setHeader("Access-Control-Allow-Origin", "*");
     hR.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control, If-Modified-Since, X-ReqId");
     hR.setHeader("Content-Type", "application/json");
-    //hR.setHeader("X-ReqId", hRq.headers['x-reqid'] || "-1");
 };
 var server = https.createServer(sslCerts, function(hRq, hR) {
     var startNodeCall = process.hrtime(),
