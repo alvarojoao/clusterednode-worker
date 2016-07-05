@@ -6,39 +6,26 @@ require('pmx').init({
                         network:       true, // Network monitoring at the application level
                         ports:         false // Shows which ports your app is listening on (default: false)
                     });
-var https        = require('https'),
-    onHeaders    = require('on-headers'),
-    fs           = require('fs'),
-    tls          = require('tls'),
-    url          = require('url'),
-    os           = require('os'),
-    Redis        = require('ioredis'),
-    //    naffinity     = require('nodeaffinity'),
-    redisCluster = [
-        {port: 6379, host: "127.0.0.1"},
-        {port: 6378, host: "127.0.0.1"},
-        {port: 6377, host: "127.0.0.1"},
-        {port: 6376, host: "127.0.0.1"},
-        {port: 6375, host: "127.0.0.1"},
-        {port: 6374, host: "127.0.0.1"}
-    ],
-    hostname     = os.hostname(),
-    netIf        = os.networkInterfaces().eth1[0].address,
-    pid          = process.pid,
-    redisReady   = false,
-    rmOK         = 'OK',
-    rmERROR      = 'ERR',
+var https         = require('https'),
+    onHeaders     = require('on-headers'),
+    fs            = require('fs'),
+    tls           = require('tls'),
+    url           = require('url'),
+    os            = require('os'),
+    Redis         = require('ioredis'),
+    hostname      = os.hostname(),
+    net           = os.networkInterfaces(),
+    netIf         = (net.eth1 === undefined) ? '127.0.0.1' : net.eth1[0].address,
+    pid           = process.pid,
+    redisReady    = false,
+    rmOK          = 'OK',
+    rmERROR       = 'ERR',
     raSET         = 'SET',
     raGET         = 'GET',
     raTRANSACTION = 'TRN',
     raPIPELINE    = 'PPL',
     hdREDIS       = 'X-Redis-Time',
     hdNODE        = 'X-Node-Time';
-//
-// Set affinity to CPUs 0,1,2
-//
-//naffinity.setAffinity(7);
-//
 // Defines certificates for enabling TLSv1.2
 //
 var sslCerts = {
@@ -49,7 +36,14 @@ var sslCerts = {
 // Create redis cluster client
 //
 var cluster = new Redis.Cluster(
-    redisCluster,
+    [
+        {port: 6379, host: "127.0.0.1"},
+        {port: 6378, host: "127.0.0.1"},
+        {port: 6377, host: "127.0.0.1"},
+        {port: 6376, host: "127.0.0.1"},
+        {port: 6375, host: "127.0.0.1"},
+        {port: 6374, host: "127.0.0.1"}
+    ],
     {
         enableReadyCheck:        true,
         maxRedirections:         6,
@@ -70,17 +64,17 @@ var cluster = new Redis.Cluster(
 //
 cluster.on("ready", function() {
     redisReady = true;
-    console.log("redis.io cluster connection opened and ready to serve");
+    console.log("redis.io cluster connections opened - ready to serve");
 });
 cluster.on("end", function() {
     redisReady = false;
-    console.log("redis.io cluster connection closed");
+    console.log("redis.io cluster connections closed");
 });
 cluster.on("error", function(err) {
     console.log("redis.io Error: " + err);
 });
 cluster.on("node error", function(err) {
-    console.log("redis.io Node Error: " + err);
+    console.log("redis.io node Error: " + err);
 });
 //
 // Create diff hrtime header
@@ -114,72 +108,101 @@ var sendRedisResults = function(jsonMsg, httpResponse, redisAction, redisValue, 
     messageHandler(jsonMsg, httpResponse, redisAction, redisValue);
 };
 //
-// Encapsulates HMSET call
+// Create jsonObject
 //
-var redisSetCall = function(jsonMsg, httpResponse, param) {
-    var startRedisCall = process.hrtime();
-    cluster.hmset(param, {hostname: hostname, pid: pid, ts: Date.now()}).then(function(redisMessage) {
-        sendRedisResults(jsonMsg, httpResponse, (redisMessage === rmOK) ? raSET : rmERROR, {}, startRedisCall);
-    }, function(redisError) {
-        sendRedisError(jsonMsg, redisError, httpResponse, startRedisCall);
-    });
+var jsonObject = function() {
+    return {hostname: hostname, pid: pid, ts: Date.now()};
 };
 //
-// Encapsulates HGETALL call
+// Generic call wrapper
 //
-var redisGetCall = function(jsonMsg, httpResponse, param) {
-    var startRedisCall = process.hrtime();
-    cluster.hgetall(param).then(function(redisMessage) {
-        sendRedisResults(jsonMsg, httpResponse, raGET, (redisMessage === '') ? {} : redisMessage, startRedisCall);
-    }, function(redisError) {
-        sendRedisError(jsonMsg, redisError, httpResponse, startRedisCall);
-    });
+var genericCallWrapper = function(jM, hR, p, prCb, okCb) {
+    var src = process.hrtime();
+    prCb(p).then(
+        okCb(jM, hR, src),
+        function(rE) { sendRedisError(jM, rE, hR, src); }
+    );
 };
 //
-// Encapsulates PIPELINE call
+// Prepare multicommand pipeline (for PIPELINE and TRANSACTION)
 //
-var redisPipelineCall = function(jM, hR, param) {
-    var startRedisCall = process.hrtime();
-    cluster.pipeline().hgetall(param).hmset(param, {
-        hostname: hostname,
-        pid:      pid,
-        ts:       Date.now()
-    }).exec().then(function(rM) {
-        sendRedisResults(jM, hR, raPIPELINE, (rM.length === 0) ? {} : rM[0][1], startRedisCall);
-    }, function(rE) {
-        sendRedisError(jM, rE, hR, startRedisCall);
-    });
-};
-//
-// Encapsulates TRANSACTION call
-//
-var redisTransactionCall = function(jM, hR, param) {
-    var startRedisCall = process.hrtime();
-    cluster.multi().hgetall(param).hmset(param, {
-        hostname: hostname,
-        pid:      pid,
-        ts:       Date.now()
-    }).exec().then(function(rM) {
-        sendRedisResults(jM, hR, raTRANSACTION, (rM.length === 0) ? {} : rM[0][1], startRedisCall);
-    }, function(rE) {
-        sendRedisError(jM, rE, hR, startRedisCall);
-    });
+var prepareCommands = function(p) {
+    return [
+        ['hgetall',
+         p],
+        ['hmset',
+         p,
+         jsonObject()]
+    ];
 };
 //
 // Prepare execution function stack
 //
-var executionMatrix = [redisGetCall,
-                       redisSetCall,
-                       redisPipelineCall,
-                       redisTransactionCall];
+var executionMatrix = [
+    //
+    // HGETALL call
+    //
+    [
+        function(p) {
+            return cluster.hgetall(p);
+        },
+        function(jM, hR, src) {
+            return function(rM) {
+                sendRedisResults(jM, hR, raGET, (rM === '') ? {} : rM, src);
+            };
+        }
+    ],
+    //
+    // HMSET call
+    //
+    [
+        function(p) {
+            return cluster.hmset(p, jsonObject());
+        },
+        function(jM, hR, src) {
+            return function(rM) {
+                sendRedisResults(jM, hR, (rM === rmOK) ? raSET : rmERROR, {}, src);
+            };
+        }
+    ],
+    //
+    // PIPELINE call
+    //
+    [
+        function(p) {
+            return cluster.pipeline(prepareCommands(p)).exec();
+        },
+        function(jM, hR, src) {
+            return function(rM) {
+                sendRedisResults(jM, hR, raPIPELINE, (rM.length === 0) ? {} : rM[0][1], src);
+            };
+        }
+    ],
+    //
+    // TRANSACTION call
+    //
+    [
+        function(p) {
+            return cluster.multi(prepareCommands(p)).exec();
+        },
+        function(jM, hR, src) {
+            return function(rM) {
+                sendRedisResults(jM, hR, raTRANSACTION, (rM.length === 0) ? {} : rM[0][1], src);
+            };
+        }
+    ]
+];
 //
-// Main HTTP/2 server handler
+// Set HTTP headers
 //
 var setAllHeaders = function(hRq, hR) {
     hR.setHeader("Access-Control-Allow-Origin", "*");
     hR.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control, If-Modified-Since, X-ReqId");
     hR.setHeader("Content-Type", "application/json");
 };
+//
+// Main HTTPS server handler
+//
 var server = https.createServer(sslCerts, function(hRq, hR) {
     var startNodeCall = process.hrtime(),
         jM            = {
@@ -194,7 +217,7 @@ var server = https.createServer(sslCerts, function(hRq, hR) {
     });
     setAllHeaders(hRq, hR);
     if (redisReady) {
-        executionMatrix[o](jM, hR, p);
+        genericCallWrapper(jM, hR, p, executionMatrix[o][0], executionMatrix[o][1]);
     }
     else {
         hR.setHeader(hdREDIS, 0);
