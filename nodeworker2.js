@@ -1,9 +1,9 @@
 'use strict';
 require('pmx').init({
-                        http:          false, // HTTP routes logging (default: true)
-                        errors:        false, // Exceptions loggin (default: true)
+                        http:          true, // HTTP routes logging (default: true)
+                        errors:        true, // Exceptions loggin (default: true)
                         custom_probes: true, // Auto expose JS Loop Latency and HTTP req/s as custom metrics
-                        network:       false, // Network monitoring at the application level
+                        network:       true, // Network monitoring at the application level
                         ports:         false // Shows which ports your app is listening on (default: false)
                     });
 var https        = require('https'),
@@ -202,8 +202,8 @@ var server = https.createServer(sslCerts, function(hRq, hR) {
     }
 }).listen(process.env.NODEPORT, netIf);
 //
-// Enables graceful stop/reload - nicely closes connections to redis and closes HTTP/2 server
-// enabling last transactions, both on redis and HTTP/2 server to be completed before exiting
+// Enables graceful stop/reload - nicely closes connections to redis and closes HTTPS server
+// enabling last transactions, both on redis and HTTPS server to be completed before exiting
 //
 process.on('SIGINT', function() {
     //
