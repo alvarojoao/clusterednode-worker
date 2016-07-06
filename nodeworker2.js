@@ -197,7 +197,7 @@ var executionMatrix = [
 //
 var setAllHeaders = function(hRq, hR) {
     hR.setHeader("Access-Control-Allow-Origin", "*");
-    hR.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control, If-Modified-Since, X-ReqId");
+    hR.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control, If-Modified-Since, x-reqid");
     hR.setHeader("Content-Type", "application/json");
 };
 //
