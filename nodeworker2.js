@@ -24,8 +24,8 @@ var https         = require('https'),
     raGET         = 'GET',
     raTRANSACTION = 'TRN',
     raPIPELINE    = 'PPL',
-    hdREDIS       = 'X-Redis-Time',
-    hdNODE        = 'X-Node-Time';
+    hdREDIS       = 'x-redis-time',
+    hdNODE        = 'x-node-time';
 // Defines certificates for enabling TLSv1.2
 //
 var sslCerts = {
