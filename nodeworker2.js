@@ -88,8 +88,8 @@ var createDiffHrtimeHeader = function(headerLabel, startHRTime, httpResponse) {
 // Message handlers
 //
 var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
-    jsonMsg.redisAction = redisAction;
-    jsonMsg.redisObject = redisValue;
+    jsonMsg.rA = redisAction;
+    jsonMsg.rO = redisValue;
     httpResponse.end(JSON.stringify(jsonMsg));
 };
 //
@@ -111,7 +111,11 @@ var sendRedisResults = function(jsonMsg, httpResponse, redisAction, redisValue, 
 // Create jsonObject
 //
 var jsonObject = function() {
-    return {hostname: hostname, pid: pid, ts: Date.now()};
+    return {
+        h: hostname,
+        p: pid,
+        t: Date.now()
+    };
 };
 //
 // Generic call wrapper
@@ -206,8 +210,8 @@ var setAllHeaders = function(hRq, hR) {
 var server = https.createServer(sslCerts, function(hRq, hR) {
     var startNodeCall = process.hrtime(),
         jM            = {
-            hostname: hostname,
-            pid:      pid
+            h: hostname,
+            p: pid
         },
         params        = url.parse(hRq.url, true).query,
         o             = params.o || 0,
