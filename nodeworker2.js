@@ -88,8 +88,8 @@ var createDiffHrtimeHeader = function(headerLabel, startHRTime, httpResponse) {
 // Message handlers
 //
 var messageHandler = function(jsonMsg, httpResponse, redisAction, redisValue) {
-    jsonMsg.rA = redisAction;
-    jsonMsg.rO = redisValue;
+    jsonMsg.a = redisAction;
+    jsonMsg.o = redisValue;
     httpResponse.end(JSON.stringify(jsonMsg));
 };
 //
