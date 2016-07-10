@@ -1,15 +1,16 @@
 {
   "name": "clusteredAPInode",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Clustered HTTP/1.1 API server",
   "main": "nodeworker2.js",
   "dependencies": {
     "hiredis": "^0.5.0",
-    "ioredis": "^2.1.0",
+    "ioredis": "^2.2.0",
+    "nan": "^2.3.5",
+    "node-pre-gyp": "^0.6.29",
     "on-headers": "^1.0.1",
     "pmx": "^0.6.2",
-    "nan": "^2.3.5",
-    "node-pre-gyp": "^0.6.28",
+    "uglify-js": "^2.7.0",
     "v8-profiler": "^5.6.5"
   },
   "devDependencies": {},
