@@ -6,7 +6,7 @@ require('pmx').init({
                         network:       true, // Network monitoring at the application level
                         ports:         false // Shows which ports your app is listening on (default: false)
                     });
-var https         = require('https'),
+var http2         = require('http2'),
     onHeaders     = require('on-headers'),
     fs            = require('fs'),
     tls           = require('tls'),
@@ -207,7 +207,7 @@ var setAllHeaders = function(hRq, hR) {
 //
 // Main HTTPS server handler
 //
-var server = https.createServer(sslCerts, function(hRq, hR) {
+var server = http2.createServer(sslCerts, function(hRq, hR) {
     var startNodeCall = process.hrtime(),
         jM            = {
             h: hostname,
