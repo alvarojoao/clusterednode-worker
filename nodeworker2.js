@@ -1,18 +1,17 @@
-import http2 from 'http2'
-import onHeaders from 'on-headers'
-import fs from 'fs'
-import url from 'url'
-import os from 'os'
-import Redis from 'ioredis'
-import pmx from 'pmx'
-pmx.init({
+require('pmx').init({
                         http:          true, // HTTP routes logging (default: true)
                         errors:        true, // Exceptions loggin (default: true)
                         custom_probes: true, // Auto expose JS Loop Latency and HTTP req/s as custom metrics
                         network:       true, // Network monitoring at the application level
                         ports:         false // Shows which ports your app is listening on (default: false)
                     });
-const hostname    = os.hostname(),
+const http2 = require('http2'),
+    onHeaders = require('on-headers'),
+    fs = require('fs'),
+    url = require('url'),
+    os = require('os'),
+    Redis = require('ioredis'),
+    hostname    = os.hostname(),
     net           = os.networkInterfaces(),
     netIf         = (net.eth1 === undefined) ? '127.0.0.1' : net.eth1[0].address,
     pid           = process.pid,

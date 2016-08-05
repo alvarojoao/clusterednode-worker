@@ -1,6 +1,6 @@
 {
   "name": "clusteredAPInode",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "Clustered HTTP/2 API server",
   "main": "nodeworker2.js",
   "dependencies": {
