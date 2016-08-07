@@ -9,11 +9,11 @@
     "max_restarts" : 10,
     "exec_mode"  : "cluster",
     "env": {
-      "NODEPORT": 8010,
+      "NODEPORT": 33333,
       "NODE_ENV": "development"
     },
     "env_production": {
-      "NODEPORT": 8010,
+      "NODEPORT": 33333,
       "NODE_ENV": "production"
     }
   }],
